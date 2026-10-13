@@ -14,7 +14,7 @@ from ..config import LOCAL_OUTPUT_DIR
 
 
 def _ratio(aspect_ratio: str) -> float:
-    """Parse '9:16' → 9/16, '1:1' → 1.0."""
+    """Parse '9:16' -> 9/16, '1:1' -> 1.0."""
     try:
         w, h = aspect_ratio.split(":")
         return float(w) / float(h)
@@ -23,7 +23,7 @@ def _ratio(aspect_ratio: str) -> float:
 
 
 def _cut_subclip(source_path: str, start: float, end: float, out_path: str) -> str:
-    """ffmpeg -ss start -to end → re-encoded mp4 with audio."""
+    """ffmpeg -ss start -to end -> re-encoded mp4 with audio."""
     cmd = [
         "ffmpeg", "-y", "-loglevel", "error",
         "-i", source_path,
@@ -73,7 +73,7 @@ def _reframe_vertical(in_path: str, out_path: str, aspect_ratio: str) -> str:
     writer = cv2.VideoWriter(silent_path, fourcc, fps, (crop_w, crop_h))
 
     last_center: Optional[Tuple[int, int]] = None
-    smoothing = 0.15  # how aggressively to chase a new face position
+    smoothing = 0.05  # how aggressively to chase a new face position
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -131,8 +131,29 @@ def crop_clip_local(
 ) -> str:
     """Cut + reframe one highlight, returning the local mp4 path."""
     cut_path = out_path + ".cut.mp4"
+    letterbox_path = out_path.replace(".mp4", "_letterbox.mp4")
     try:
         _cut_subclip(source_path, start_time, end_time, cut_path)
+        
+        # 1. Generate Letterbox version (no camera movement)
+        if aspect_ratio == "9:16":
+            tw, th = 1080, 1920
+        elif aspect_ratio == "1:1":
+            tw, th = 1080, 1080
+        else:
+            tw, th = 1080, 1920
+            
+        cmd = [
+            "ffmpeg", "-y", "-loglevel", "error",
+            "-i", cut_path,
+            "-vf", f"scale={tw}:{th}:force_original_aspect_ratio=decrease,pad={tw}:{th}:(ow-iw)/2:(oh-ih)/2",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+            "-c:a", "copy",
+            letterbox_path
+        ]
+        subprocess.run(cmd, check=True)
+
+        # 2. Generate Face-tracked smooth version
         _reframe_vertical(cut_path, out_path, aspect_ratio)
     finally:
         if os.path.exists(cut_path):

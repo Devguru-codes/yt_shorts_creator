@@ -157,8 +157,8 @@ def call_highlight_api(
     # Ask for ~2× the user's target so dedupe has headroom, but cap so the model
     # doesn't have to generate a huge JSON payload (which times out gpt-5-mini).
     target = max(num_clips * 2, 5)
-    natural_max = max(2 if is_chunk else 3, int(duration / 90))
-    min_clips = min(target, natural_max, 8)
+    natural_max = max(2 if is_chunk else 3, int(duration / 60)) # More density
+    min_clips = min(target, natural_max, 25) # Allow up to 25 clips per 20-min chunk
     system = HIGHLIGHT_SYSTEM_PROMPT.format(
         virality_criteria=VIRALITY_CRITERIA,
         content_type=content_info.get("content_type", "other"),
@@ -167,7 +167,11 @@ def call_highlight_api(
     )
     full_prompt = f"{system}\n\nTranscript:\n{transcript_text}"
     raw = llm_fn(full_prompt)
-    return _parse_json_loose(raw)
+    try:
+        return _parse_json_loose(raw)
+    except Exception as e:
+        print(f"[highlights] Warning: LLM returned malformed JSON ({e}). Skipping this chunk.", flush=True)
+        return {"highlights": []}
 
 
 def dedupe_highlights(highlights: List[Dict]) -> List[Dict]:

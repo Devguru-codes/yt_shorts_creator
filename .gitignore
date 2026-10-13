@@ -1,8 +1,37 @@
+# Environment & Secrets
 .env
-__pycache__/
-*.pyc
-.venv/
-venv/
+*.env
+.env.*
+!.env.example
+
+# Logs & History
+*.log
+automator.log
+geckodriver.log
+processed_history.json
+schedule_state.json
+
+# Browser Profiles & Cookies (CRITICAL SECURITY)
+youtube_uploader_selenium/profile/
+*.pkl
+
+# Outputs & Video Files
 output/
 *.mp4
+*.mkv
+*.webm
+*.srt
+*.vtt
+
+# Python & Virtual Environments
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+env/
+.pytest_cache/
+
+# OS specific
 .DS_Store
+Thumbs.db

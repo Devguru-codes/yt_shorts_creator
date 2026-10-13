@@ -1,2 +1,21 @@
-requests>=2.31
-python-dotenv>=1.0
+# Core Utilities & Network
+requests>=2.31.0
+python-dotenv>=1.0.0
+Pillow>=10.0.0
+
+# Video Download & Audio Processing
+yt-dlp>=2024.1.1
+faster-whisper>=1.0.0
+
+# AI Models (Gemini + Groq Failover)
+google-genai>=1.0.0
+groq>=0.11.0
+openai>=1.0.0
+
+# Computer Vision & Auto-Cropping
+opencv-python>=4.8.0
+
+# Automated YouTube Studio Upload & Scheduling
+selenium>=4.10.0
+selenium_firefox>=1.0.7
+webdriver_manager>=4.0.0
